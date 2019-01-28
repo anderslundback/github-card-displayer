@@ -1,25 +1,79 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import axios from 'axios';
+
+const Card = (props) => {
+  return (
+    <div style={{margin: '1em'}}>
+      <img width="75" src={props.avatar_url} />
+      <div style={{display: 'inline-block', marginLeft: 10}}>
+        <div style={{fontSize: '1.25em', fontWeight: 'bold'}}>
+          {props.name}
+        </div>
+        <div>{props.company}</div>
+      </div>
+    </div>
+  )
+}
+
+const CardList = (props) => {
+  return (
+    <div>
+      {props.cards.map(card => <Card key={card.id} {...card} />)}
+    </div>
+  )
+}
+
+class Form extends React.Component {
+  state = { userName: '' }
+  handleSubmit = (event) => {
+    event.preventDefault();
+    axios.get(`https://api.github.com/users/${this.state.userName}`)
+      .then(resp => {
+        this.props.onSubmit(resp.data);
+        this.setState({ userName: '' })
+      });
+  };
+  render () {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <input type="text" 
+        value={this.state.userName}
+        onChange={(event) => this.setState({ userName: event.target.value })}
+        placeholder="Github username" required />
+        <button type="submit">Add card</button>
+      </form>
+    );
+  }
+}
 
 class App extends Component {
+  state = {
+    cards : [
+      {
+        name: "Anders Lundbäck",
+        avatar_url: "https://avatars1.githubusercontent.com/u/8585021?v=4",
+        company: "Post Office"
+      },
+      {
+        name: "Bhavik Sheth",
+        avatar_url: "https://avatars3.githubusercontent.com/u/18286819?v=4",
+        company: "Medidata Solutions"
+      },
+    ]
+  };
+
+  addNewCard = (cardInfo) => {
+    this.setState(prevState => ({
+      cards: prevState.cards.concat(cardInfo)
+    }))
+  };
+
   render() {
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+        <Form onSubmit={this.addNewCard} />
+        <CardList cards={this.state.cards} />     
       </div>
     );
   }
